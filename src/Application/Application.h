@@ -1,31 +1,53 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <memory>
-#include "../PCK/PCKFile.h"
+#include <imgui.h>
+#include "SDL3/SDL.h"
+#include "Log.h"
+#include <glad/glad.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_opengl3.h>
+#include "Layer.h"
 
-class Application {
+struct ApplicationSpecification
+{
+    const char *title;
+    int width;
+    int height;
+};
+
+class Application
+{
 public:
-    Application() = default;
+    Application();
     ~Application() = default;
 
-    // Initialize core app; pass argc/argv if needed for CLI args
-    bool Init(int argc, char* argv[]);
+    // Initialize core app
+    bool Initialize(ApplicationSpecification &spec);
+
+    void ParseCommandLineArguments(int argc, const char **argv);
 
     // Cleanup any core resources
     void Shutdown();
 
-    // Get current PCK file; TODO: make this support multiple pcks
-    PCKFile* CurrentPCKFile();
+    SDL_Window *GetWindow() const { return mWindow; }
 
-    // Loads PCK File from path
-    void LoadPCKFile(const std::string& filepath);
+    void Run(void);
 
-    // Application Update
-    void Update();
+    template <class TLayer, typename... Args>
+    void AddLayer(Args... args)
+    {
+        auto l = std::make_unique<TLayer>(args...);
+        l->OnAttach();
+        mLayers.push_back(std::move(l));
+    }
+
+    static Application &Get();
 
 private:
-    PCKFile* mCurrentPCKFile{ nullptr };
-    bool initialized{ false };
+    SDL_Window *mWindow{nullptr};
+    SDL_GLContext mContext{nullptr};
+    bool mInitialized{false};
+    std::vector<std::unique_ptr<Layer>> mLayers;
 };
-
-extern Application* gApp;

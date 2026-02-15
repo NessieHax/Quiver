@@ -1,11 +1,12 @@
 #pragma once
 #include <SDL3/SDL.h>
+#include "Buffer.h"
 #include <SDL3/SDL_dialog.h>
 #include <algorithm>
 #include <fstream>
 #include <functional>
 #include <string>
-#include "../PCK/PCKAssetFile.h"
+#include "PCK/PCKAssetFile.h"
 
 namespace IO
 {
@@ -42,7 +43,7 @@ namespace IO
 	std::string SaveFileDialog(SDL_Window* window, const SDL_DialogFileFilter* filters, const std::string& defaultName);
 
 	// For saving files with SDL's file system AND writing with support for Properties
-	std::string SaveFileDialogWithProperties(SDL_Window* window, SDL_DialogFileFilter* filters, const std::vector<unsigned char>& fileData, const std::string& defaultName, bool ignoreExt = false, const std::vector<PCKAssetFile::Property>& properties = {});
+	std::string SaveFileDialogWithProperties(SDL_Window* window, SDL_DialogFileFilter* filters, const Buffer& fileData, const std::string& defaultName, bool ignoreExt = false, const std::vector<PCKAssetFile::Property>& properties = {});
 
 	// For choosing a folder to work with
 	std::string ChooseFolderDialog(SDL_Window* window, const std::string& title);

@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <filesystem>
 #include <locale>
 #include <codecvt>
 #include "IO.h"
@@ -13,7 +14,7 @@
 class BinaryReader
 {
 public:
-	BinaryReader(const std::string& filepath);
+	BinaryReader(const std::filesystem::path &filepath);
 	~BinaryReader()
 	{
 		if (mStream)
@@ -31,7 +32,7 @@ public:
 	static uint16_t SwapInt16(uint16_t value);
 	static uint32_t SwapInt32(uint32_t value);
 
-	void ReadData(void* buffer, size_t size);
+	size_t ReadData(void *buffer, size_t size);
 
 private:
 	std::ifstream mStream;

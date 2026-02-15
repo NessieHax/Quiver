@@ -1,8 +1,10 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <filesystem>
 #include <fstream>
 #include <array>
+#include "Buffer.h"
 
 // PCK Asset File and Asset File Types research done by NessieHax/Miku666/nullptr, myself (May/MattNL), and many others over the years.
 
@@ -49,126 +51,161 @@ public:
 	};
 
 	// Gets a asset type as a string
-	constexpr const char* PCKAssetFile::getAssetTypeString() const
+	constexpr const char *PCKAssetFile::getAssetTypeString() const
 	{
 		return getAssetTypeString(mAssetType);
 	}
 
 	// Gets a asset type as a string
-	static constexpr const char* PCKAssetFile::getAssetTypeString(PCKAssetFile::Type type)
+	static constexpr const char *PCKAssetFile::getAssetTypeString(PCKAssetFile::Type type)
 	{
 		switch (type)
 		{
-		case Type::SKIN: return "SKIN";
-		case Type::CAPE: return "CAPE";
-		case Type::TEXTURE: return "TEXTURE";
-		case Type::UI_DATA: return "UI_DATA";
-		case Type::INFO: return "INFO";
-		case Type::TEXTURE_PACK_INFO: return "TEXTURE_PACK_INFO";
-		case Type::LOCALISATION: return "LOCALISATION";
-		case Type::GAME_RULES: return "GAME_RULES";
-		case Type::AUDIO_DATA: return "AUDIO_DATA";
-		case Type::COLOUR_TABLE: return "COLOUR_TABLE";
-		case Type::GAME_RULES_HEADER: return "GAME_RULES_HEADER";
-		case Type::SKIN_DATA: return "SKIN_DATA";
-		case Type::MODELS: return "MODELS";
-		case Type::BEHAVIOURS: return "BEHAVIOURS";
-		case Type::MATERIALS: return "MATERIALS";
-		default: return "UNKNOWN";
+		case Type::SKIN:
+			return "SKIN";
+		case Type::CAPE:
+			return "CAPE";
+		case Type::TEXTURE:
+			return "TEXTURE";
+		case Type::UI_DATA:
+			return "UI_DATA";
+		case Type::INFO:
+			return "INFO";
+		case Type::TEXTURE_PACK_INFO:
+			return "TEXTURE_PACK_INFO";
+		case Type::LOCALISATION:
+			return "LOCALISATION";
+		case Type::GAME_RULES:
+			return "GAME_RULES";
+		case Type::AUDIO_DATA:
+			return "AUDIO_DATA";
+		case Type::COLOUR_TABLE:
+			return "COLOUR_TABLE";
+		case Type::GAME_RULES_HEADER:
+			return "GAME_RULES_HEADER";
+		case Type::SKIN_DATA:
+			return "SKIN_DATA";
+		case Type::MODELS:
+			return "MODELS";
+		case Type::BEHAVIOURS:
+			return "BEHAVIOURS";
+		case Type::MATERIALS:
+			return "MATERIALS";
+		default:
+			return "UNKNOWN";
 		}
 	}
 
 	// Gets a asset type as a string for dialogs
-	constexpr const char* PCKAssetFile::getAssetTypeStringDisplay() const
+	constexpr const char *PCKAssetFile::getAssetTypeStringDisplay() const
 	{
 		return getAssetTypeStringDisplay(mAssetType);
 	}
 
 	// Gets a asset type as a string for dialogs
-	static constexpr const char* PCKAssetFile::getAssetTypeStringDisplay(PCKAssetFile::Type type)
+	static constexpr const char *PCKAssetFile::getAssetTypeStringDisplay(PCKAssetFile::Type type)
 	{
 		switch (type)
 		{
-		case Type::SKIN: return "Skin";
-		case Type::CAPE: return "Cape";
-		case Type::TEXTURE: return "Texture";
-		case Type::UI_DATA: return "UI Data";
-		case Type::INFO: return "Info";
-		case Type::TEXTURE_PACK_INFO: return "Texture Pack Info";
-		case Type::LOCALISATION: return "Localisation";
-		case Type::GAME_RULES: return "Game Rules";
-		case Type::AUDIO_DATA: return "Audio Data";
-		case Type::COLOUR_TABLE: return "Colour Table";
-		case Type::GAME_RULES_HEADER: return "Game Rules Header";
-		case Type::SKIN_DATA: return "Skin Data";
-		case Type::MODELS: return "Models";
-		case Type::BEHAVIOURS: return "Behaviours";
-		case Type::MATERIALS: return "Materials";
-		default: return "Unknown";
+		case Type::SKIN:
+			return "Skin";
+		case Type::CAPE:
+			return "Cape";
+		case Type::TEXTURE:
+			return "Texture";
+		case Type::UI_DATA:
+			return "UI Data";
+		case Type::INFO:
+			return "Info";
+		case Type::TEXTURE_PACK_INFO:
+			return "Texture Pack Info";
+		case Type::LOCALISATION:
+			return "Localisation";
+		case Type::GAME_RULES:
+			return "Game Rules";
+		case Type::AUDIO_DATA:
+			return "Audio Data";
+		case Type::COLOUR_TABLE:
+			return "Colour Table";
+		case Type::GAME_RULES_HEADER:
+			return "Game Rules Header";
+		case Type::SKIN_DATA:
+			return "Skin Data";
+		case Type::MODELS:
+			return "Models";
+		case Type::BEHAVIOURS:
+			return "Behaviours";
+		case Type::MATERIALS:
+			return "Materials";
+		default:
+			return "Unknown";
 		}
 	}
 
-	constexpr std::array<const char*, 2> PCKAssetFile::getPreferredExtension() const
+	constexpr std::array<const char *, 2> PCKAssetFile::getPreferredExtension() const
 	{
 		return getPreferredExtension(mAssetType);
 	}
 
-	static constexpr std::array<const char*, 2> PCKAssetFile::getPreferredExtension(PCKAssetFile::Type type)
+	static constexpr std::array<const char *, 2> PCKAssetFile::getPreferredExtension(PCKAssetFile::Type type)
 	{
 		switch (type)
 		{
 		case Type::SKIN:
 		case Type::CAPE:
 		case Type::TEXTURE:
-			return { "png", "tga" };
+			return {"png", "tga"};
 		case Type::TEXTURE_PACK_INFO:
 		case Type::AUDIO_DATA:
 		case Type::SKIN_DATA:
-			return { "pck", nullptr };
+			return {"pck", nullptr};
 		case Type::LOCALISATION:
-			return { "loc", nullptr };
+			return {"loc", nullptr};
 		case Type::GAME_RULES:
-			return { "grf", nullptr };
+			return {"grf", nullptr};
 		case Type::COLOUR_TABLE:
-			return { "col", nullptr };
+			return {"col", nullptr};
 		case Type::GAME_RULES_HEADER:
-			return { "grh", nullptr };
+			return {"grh", nullptr};
 		case Type::MODELS:
 		case Type::BEHAVIOURS:
 		case Type::MATERIALS:
-			return { "bin", nullptr };
+			return {"bin", nullptr};
 		default:
-			return { "*" }; // any file type
+			return {"*"}; // any file type
 		}
 	}
 
-	PCKAssetFile(const std::string& path, const std::vector<unsigned char>& data, Type assetType)
-		: mAssetType(assetType), mData(data), mPath(path) {
+	PCKAssetFile(const std::string &path, const std::vector<unsigned char> &data, Type assetType)
+		: PCKAssetFile(path, assetType, data.size())
+	{
+		mData = data;
 	}
 
-	PCKAssetFile(const std::string& path, Type assetType)
-		: PCKAssetFile(path, {}, assetType) {
+	PCKAssetFile(const std::string &path, Type assetType, uint32_t size)
+		: mAssetType(assetType), mData(OwnedBuffer(size)), mPath(path)
+	{
 	}
 
-	~PCKAssetFile() {
-		mData.clear();
+	~PCKAssetFile()
+	{
 		mPath.clear();
 	}
 
 	// Gets the file size, in bytes
-	std::size_t getFileSize() const;
+	size_t getFileSize() const;
 
 	// Gets the file data as a const unsigned char vector
-	const std::vector<unsigned char>& getData() const;
+	const Buffer &getData() const;
 
 	// Sets the file data with a const unsigned char vector
-	void setData(const std::vector<unsigned char>& data);
+	void setData(const std::vector<unsigned char> &data);
 
 	// Gets the file path
-	const std::string& getPath() const;
+	const std::filesystem::path &getPath() const;
 
 	// Sets the file path
-	void setPath(const std::string& inpath);
+	void setPath(const std::filesystem::path &inpath);
 
 	// Get the asset type
 	Type getAssetType() const;
@@ -177,23 +214,23 @@ public:
 	bool isImageType() const;
 
 	// Adds a property to the file
-	void addProperty(const std::string& key, const std::u16string& value);
+	void addProperty(const std::string &key, const std::u16string &value);
 
 	// Removes a property from the file
 	void removeProperty(int index);
 
 	// Sets a property's key and value
-	void setPropertyAtIndex(int index, const std::string& key, const std::u16string& value);
+	void setPropertyAtIndex(int index, const std::string &key, const std::u16string &value);
 
 	// Clears the file's properties
 	void clearProperties();
 
 	// Returns the files properties as a... vector of a pair of a string and u16string
-	const std::vector<Property>& getProperties() const;
+	const std::vector<Property> &getProperties() const;
 
 private:
-	Type mAssetType{ Type::SKIN };
-	std::vector<unsigned char> mData;
-	std::string mPath;
+	Type mAssetType;
+	OwnedBuffer mData;
+	std::filesystem::path mPath;
 	std::vector<Property> mProperties;
 };

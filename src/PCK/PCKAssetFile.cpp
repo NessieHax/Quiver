@@ -1,30 +1,37 @@
 #include "PCKAssetFile.h"
 
-std::size_t PCKAssetFile::getFileSize() const {
-	return mData.size();
+size_t PCKAssetFile::getFileSize() const
+{
+	return mData.Size;
 }
 
-const std::vector<unsigned char>& PCKAssetFile::getData() const {
+const Buffer &PCKAssetFile::getData() const
+{
 	return mData;
 }
 
-void PCKAssetFile::setData(const std::vector<unsigned char>& data) {
+void PCKAssetFile::setData(const std::vector<unsigned char> &data)
+{
 	mData = data;
 }
 
-const std::string& PCKAssetFile::getPath() const {
-	return mPath; 
+const std::filesystem::path &PCKAssetFile::getPath() const
+{
+	return mPath;
 }
 
-void PCKAssetFile::setPath(const std::string& inpath) {
+void PCKAssetFile::setPath(const std::filesystem::path &inpath)
+{
 	mPath = inpath;
 }
 
-PCKAssetFile::Type PCKAssetFile::getAssetType() const {
+PCKAssetFile::Type PCKAssetFile::getAssetType() const
+{
 	return mAssetType;
 }
 
-void PCKAssetFile::addProperty(const std::string& key, const std::u16string& value) {
+void PCKAssetFile::addProperty(const std::string &key, const std::u16string &value)
+{
 	mProperties.push_back(PCKAssetFile::Property(key, value));
 }
 
@@ -34,10 +41,11 @@ void PCKAssetFile::removeProperty(int index)
 		mProperties.erase(mProperties.begin() + index);
 }
 
-void PCKAssetFile::setPropertyAtIndex(int index, const std::string& key, const std::u16string& value)
+void PCKAssetFile::setPropertyAtIndex(int index, const std::string &key, const std::u16string &value)
 {
-	if (index < 0 || index >= (int)mProperties.size()) return;
-	mProperties[index] = { key, value };
+	if (index < 0 || index >= (int)mProperties.size())
+		return;
+	mProperties[index] = {key, value};
 }
 
 void PCKAssetFile::clearProperties()
@@ -45,14 +53,14 @@ void PCKAssetFile::clearProperties()
 	mProperties.clear();
 }
 
-const std::vector<PCKAssetFile::Property>& PCKAssetFile::getProperties() const
+const std::vector<PCKAssetFile::Property> &PCKAssetFile::getProperties() const
 {
 	return mProperties;
 }
 
-const PCKAssetFile::Type IMAGE_ASSET_TYPES[]{ PCKAssetFile::Type::SKIN, PCKAssetFile::Type::CAPE, PCKAssetFile::Type::TEXTURE };
+const PCKAssetFile::Type IMAGE_ASSET_TYPES[]{PCKAssetFile::Type::SKIN, PCKAssetFile::Type::CAPE, PCKAssetFile::Type::TEXTURE};
 
 bool PCKAssetFile::isImageType() const
 {
-	return std::find(std::begin(IMAGE_ASSET_TYPES), std::end(IMAGE_ASSET_TYPES), mAssetType) != std::end(IMAGE_ASSET_TYPES);
+	return mAssetType >= PCKAssetFile::Type::SKIN && mAssetType <= PCKAssetFile::Type::TEXTURE;
 }

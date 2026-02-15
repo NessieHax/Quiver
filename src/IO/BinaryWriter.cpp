@@ -1,10 +1,10 @@
 #include "BinaryWriter.h"
 
-BinaryWriter::BinaryWriter(const std::string& filepath)
+BinaryWriter::BinaryWriter(const std::filesystem::path& filepath)
 	: mStream(filepath, std::ios::binary)
 {
 	if (!mStream) {
-		throw std::runtime_error("Failed to open file for writing: " + filepath);
+		throw std::runtime_error("Failed to open file for writing: " + filepath.string());
 	}
 }
 

@@ -1,11 +1,8 @@
 #include "BinaryReader.h"
 
-BinaryReader::BinaryReader(const std::string& filepath)
+BinaryReader::BinaryReader(const std::filesystem::path &filepath)
 	: mStream(filepath, std::ios::binary)
 {
-	if (!mStream) {
-		throw std::runtime_error("Failed to open file: " + filepath);
-	}
 }
 
 void BinaryReader::SetEndianness(IO::Endianness endianness)
@@ -45,27 +42,20 @@ std::u16string BinaryReader::ReadU16String(size_t length)
 
 	for (size_t i = 0; i < length; ++i)
 	{
-		uint16_t ch;
-		uint8_t bytes[2];
-		ReadData(bytes, 2);
-
-		if (mEndianness == IO::Endianness::BIG)
-			ch = (bytes[0] << 8) | bytes[1];
-		else
-			ch = (bytes[1] << 8) | bytes[0];
-
-		utf16str[i] = ch;
+		utf16str[i] = ReadInt16();
 	}
 
 	return utf16str;
 }
 
-void BinaryReader::ReadData(void* buffer, size_t size)
+size_t BinaryReader::ReadData(void *buffer, size_t size)
 {
-	mStream.read(reinterpret_cast<char*>(buffer), size);
-	if (mStream.gcount() != size) {
-		throw std::runtime_error("Failed to read from file.");
+	mStream.read(reinterpret_cast<char *>(buffer), size);
+	if (mStream.gcount() != size)
+	{
+		return 0;
 	}
+	return size;
 }
 
 uint16_t BinaryReader::SwapInt16(uint16_t val)
@@ -76,7 +66,7 @@ uint16_t BinaryReader::SwapInt16(uint16_t val)
 uint32_t BinaryReader::SwapInt32(uint32_t val)
 {
 	return ((val & 0xFF) << 24) |
-		((val & 0xFF00) << 8) |
-		((val & 0xFF0000) >> 8) |
-		((val & 0xFF000000) >> 24);
+		   ((val & 0xFF00) << 8) |
+		   ((val & 0xFF0000) >> 8) |
+		   ((val & 0xFF000000) >> 24);
 }

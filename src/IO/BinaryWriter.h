@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <filesystem>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -13,7 +14,7 @@
 class BinaryWriter
 {
 public:
-	BinaryWriter(const std::string& filepath);
+	BinaryWriter(const std::filesystem::path& filepath);
 	~BinaryWriter()
 	{
 		if (mStream)

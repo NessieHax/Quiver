@@ -1,17 +1,12 @@
 #include "PCKFile.h"
-#include "../IO/BinaryReader.h"
-#include "../IO/BinaryWriter.h"
+#include "IO/BinaryReader.h"
+#include "IO/BinaryWriter.h"
 #include <set>
 
-const char* XML_VERSION_STRING{ "XMLVERSION" }; // used for advanced/full box support for skins
+const char *XML_VERSION_STRING = "XMLVERSION"; // used for advanced/full box support for skins
 
-void PCKFile::Read(const std::string& inpath)
+void PCKFile::Read(const std::filesystem::path &inpath)
 {
-	if (!this)
-	{
-		return; // no longer attempt to read if null for some reason
-	}
-
 	BinaryReader reader(inpath);
 
 	uint32_t version;
@@ -22,13 +17,13 @@ void PCKFile::Read(const std::string& inpath)
 	if (versionSwapped >= 0 && versionSwapped <= 3)
 	{
 		mEndianess = IO::Endianness::BIG;
-		SDL_Log("Big Endian detected, version %u", versionSwapped);
+		DBG_LOG("Big Endian detected, version %u", versionSwapped);
 		mVersion = versionSwapped;
 	}
 	else if (version >= 0 && version <= 3)
 	{
 		mEndianess = IO::Endianness::LITTLE;
-		SDL_Log("Little Endian detected, version %u", version);
+		DBG_LOG("Little Endian detected, version %u", version);
 		mVersion = version;
 	}
 	else
@@ -39,19 +34,19 @@ void PCKFile::Read(const std::string& inpath)
 	reader.SetEndianness(mEndianess);
 
 	uint32_t propertyCount = reader.ReadInt32();
-	SDL_Log("Properties: %u", propertyCount);
+	DBG_LOG("Properties: %u", propertyCount);
 
 	mProperties.clear();
 	mProperties.reserve(propertyCount);
 
-	for (uint32_t i{ 0 }; i < propertyCount; i++)
+	for (int i = 0; i < propertyCount; i++)
 	{
 		uint32_t propertyIndex = reader.ReadInt32();
 		uint32_t stringLength = reader.ReadInt32();
 
 		std::string property = IO::ToUTF8(reader.ReadU16String(stringLength));
 
-		SDL_Log("\tIndex: %u, Property: %s", propertyIndex, property.c_str());
+		DBG_LOG("\tIndex: %u, Property: %s", propertyIndex, property.c_str());
 
 		mProperties.push_back(property);
 
@@ -59,19 +54,18 @@ void PCKFile::Read(const std::string& inpath)
 	}
 
 	mXMLSupport = std::any_of(mProperties.begin(), mProperties.end(),
-		[](const std::string& property) { return property == XML_VERSION_STRING; });
+							  [](const std::string &property)
+							  { return property == XML_VERSION_STRING; });
 
-	if (mXMLSupport) {
+	if (mXMLSupport)
+	{
 		reader.ReadInt32(); // just "skip" 4 bytes
-		SDL_Log("XML Version: %u", mXMLSupport);
+		DBG_LOG("XML Version: %u", mXMLSupport);
 	}
 
 	uint32_t fileCount = reader.ReadInt32();
-
-	// temporary file size vector to hold sizes for now
-	std::vector<uint32_t> fileSizes{};
-
-	for (uint32_t i{ 0 }; i < fileCount; i++)
+	mFiles.reserve(fileCount);
+	for (uint32_t i{0}; i < fileCount; i++)
 	{
 		uint32_t fileSize = reader.ReadInt32();
 		uint32_t fileType = reader.ReadInt32();
@@ -82,25 +76,26 @@ void PCKFile::Read(const std::string& inpath)
 
 		reader.ReadInt32(); // skip 4 bytes
 
-		mFiles.emplace_back(filePath, PCKAssetFile::Type(fileType));
-		fileSizes.push_back(fileSize);
+		mFiles.emplace_back(std::make_shared<PCKAssetFile>(filePath, PCKAssetFile::Type(fileType), fileSize));
 	}
 
-	SDL_Log("Files: %u", fileCount);
+	DBG_LOG("Files: %u", fileCount);
 
-	for (int i{ 0 }; i < mFiles.size(); ++i)
+	for (int i = 0; i < mFiles.size(); ++i)
 	{
-		PCKAssetFile& file = mFiles[i];
+		std::shared_ptr<PCKAssetFile> &file = mFiles[i];
 		uint32_t propertyCount = reader.ReadInt32();
 
-		SDL_Log("\tSize: %u Bytes | Type: %u | Properties: %u | Path: %s", fileSizes[i], (uint32_t)file.getAssetType(), propertyCount, file.getPath().c_str());
+		DBG_LOG("\tSize: %zu Bytes | Type: %u | Properties: %u | Path: %ls", file->getFileSize(), (uint32_t)file->getAssetType(), propertyCount, file->getPath().c_str());
 
-		for (int j{ 0 }; j < propertyCount; j++)
+		for (int j{0}; j < propertyCount; j++)
 		{
 			uint32_t propertyIndex = reader.ReadInt32();
 
-			if (propertyIndex >= mProperties.size()) {
-				throw std::runtime_error("Property index out of range");
+			if (propertyIndex >= mProperties.size())
+			{
+				DBG_LOG("Property index out of range. skipping...");
+				continue;
 			}
 
 			std::string propertyKey = mProperties[propertyIndex];
@@ -109,31 +104,25 @@ void PCKFile::Read(const std::string& inpath)
 
 			reader.ReadInt32(); // skip 4 bytes
 
-			SDL_Log("\t\tProperty: %s %s", propertyKey.c_str(), IO::ToUTF8(propertyValue).c_str());
+			DBG_LOG("\t\tProperty: %s %s", propertyKey.c_str(), IO::ToUTF8(propertyValue).c_str());
 
-			file.addProperty(propertyKey, propertyValue);
+			file->addProperty(propertyKey, propertyValue);
 		}
 
-		std::vector<unsigned char> fileData(fileSizes[i]);
-		reader.ReadData(fileData.data(), fileData.size());
-		file.setData(std::move(fileData));
+		auto &buffer = file->getData();
+		reader.ReadData(buffer.Data, buffer.Size);
 	}
 
 	setFilePath(inpath); // finally set the path if everything went well
 }
 
-void PCKFile::Write(const std::string& outpath, IO::Endianness endianness)
+void PCKFile::Write(const std::filesystem::path &outpath)
 {
-	if (!this)
-	{
-		return; // no longer attempt to write if null for some reason
-	}
-
 	BinaryWriter writer(outpath);
-	writer.SetEndianness(endianness);
+	writer.SetEndianness(mEndianess);
 
 	uint32_t versionOut = mVersion;
-	if (endianness != IO::Endianness::LITTLE)
+	if (mEndianess != IO::Endianness::LITTLE)
 		versionOut = BinaryWriter::SwapInt32(mVersion);
 	writer.WriteData(&versionOut, sizeof(uint32_t));
 
@@ -144,9 +133,9 @@ void PCKFile::Write(const std::string& outpath, IO::Endianness endianness)
 	if (mXMLSupport)
 		mProperties.push_back(XML_VERSION_STRING);
 
-	for (const auto& file : mFiles)
+	for (const auto &file : mFiles)
 	{
-		for (const auto& [key, _] : file.getProperties())
+		for (const auto &[key, _] : file->getProperties())
 		{
 			if (propertySet.insert(key).second) // only insert if not already in set
 				mProperties.push_back(key);
@@ -172,23 +161,23 @@ void PCKFile::Write(const std::string& outpath, IO::Endianness endianness)
 	uint32_t fileCount = static_cast<uint32_t>(mFiles.size());
 	writer.WriteInt32(fileCount);
 
-	for (const auto& file : mFiles)
+	for (const auto &file : mFiles)
 	{
-		writer.WriteInt32(static_cast<uint32_t>(file.getFileSize()));
-		writer.WriteInt32(static_cast<uint32_t>(file.getAssetType()));
+		writer.WriteInt32(static_cast<uint32_t>(file->getFileSize()));
+		writer.WriteInt32(static_cast<uint32_t>(file->getAssetType()));
 
-		const std::string& filePath = file.getPath();
+		const std::string &filePath = file->getPath().string();
 		writer.WriteInt32(static_cast<uint32_t>(filePath.size()));
 		writer.WriteU16String(IO::ToUTF16(filePath));
 		writer.WriteInt32(0); // skip 4 bytes
 	}
 
-	for (const auto& file : mFiles)
+	for (const auto &file : mFiles)
 	{
-		const auto& props = file.getProperties();
+		const auto &props = file->getProperties();
 		writer.WriteInt32(static_cast<uint32_t>(props.size()));
 
-		for (const auto& [key, value] : props)
+		for (const auto &[key, value] : props)
 		{
 			auto it = std::find(mProperties.begin(), mProperties.end(), key);
 			uint32_t index = static_cast<uint32_t>(std::distance(mProperties.begin(), it));
@@ -198,26 +187,26 @@ void PCKFile::Write(const std::string& outpath, IO::Endianness endianness)
 			writer.WriteInt32(0); // skip 4 bytes
 		}
 
-		writer.WriteData(file.getData().data(), file.getFileSize());
+		writer.WriteData(file->getData().Data, file->getFileSize());
 	}
 }
 
-void PCKFile::addFile(const PCKAssetFile* file)
+void PCKFile::addFile(const std::shared_ptr<PCKAssetFile> &file)
 {
 	// emplace just sounds cooler, okay??
-	mFiles.emplace_back(*file);
+	mFiles.push_back(file);
 }
 
-void PCKFile::deleteFile(const PCKAssetFile* file)
+void PCKFile::deleteFile(const std::shared_ptr<PCKAssetFile> &file)
 {
 	if (!file)
 		return;
 
-	auto it = std::remove_if(mFiles.begin(), mFiles.end(), [&](const PCKAssetFile& f) {
-		return &f == file;
-		});
+	auto it = std::remove_if(mFiles.begin(), mFiles.end(), [&](const std::shared_ptr<PCKAssetFile> &f)
+							 { return f == file; });
 
-	if (it != mFiles.end()) {
+	if (it != mFiles.end())
+	{
 		mFiles.erase(it, mFiles.end());
 		return;
 	}
@@ -240,12 +229,12 @@ IO::Endianness PCKFile::getEndianness() const
 	return mEndianess;
 }
 
-const std::vector<std::string>& PCKFile::getPropertyKeys() const
+const std::vector<std::string> &PCKFile::getPropertyKeys() const
 {
 	return mProperties;
 }
 
-const std::vector<PCKAssetFile>& PCKFile::getFiles() const
+const std::vector<std::shared_ptr<PCKAssetFile>> &PCKFile::getFiles() const
 {
 	return mFiles;
 }
@@ -266,9 +255,9 @@ PCKFile::~PCKFile()
 	mFiles.clear();
 }
 
-std::string PCKFile::getFilePath() const
+const std::filesystem::path& PCKFile::getFilePath() const
 {
-	return mFilePath.string();
+	return mFilePath;
 }
 
 std::string PCKFile::getFileName() const
@@ -276,7 +265,7 @@ std::string PCKFile::getFileName() const
 	return mFilePath.filename().string();
 }
 
-void PCKFile::setFilePath(const std::string& pathin)
+void PCKFile::setFilePath(const std::filesystem::path &pathin)
 {
 	mFilePath = pathin;
 }
