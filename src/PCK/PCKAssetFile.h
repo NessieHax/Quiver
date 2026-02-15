@@ -1,10 +1,18 @@
 #pragma once
+<<<<<<< HEAD
 #include <vector>
 #include <string>
 #include <filesystem>
 #include <fstream>
 #include <array>
 #include "Buffer.h"
+=======
+
+#include <algorithm>
+#include <fstream>
+#include <vector>
+#include <filesystem>
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 
 // PCK Asset File and Asset File Types research done by NessieHax/Miku666/nullptr, myself (May/MattNL), and many others over the years.
 
@@ -51,12 +59,36 @@ public:
 	};
 
 	// Gets a asset type as a string
+<<<<<<< HEAD
 	constexpr const char *PCKAssetFile::getAssetTypeString() const
+=======
+	constexpr const char* getAssetTypeString() const
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	{
 		return getAssetTypeString(mAssetType);
 	}
 
+	// All the types as all the strings :3
+	static constexpr const char* AssetTypeStrings[] = {
+		"SKIN",
+		"CAPE",
+		"TEXTURE",
+		"UI_DATA",
+		"INFO",
+		"TEXTURE_PACK_INFO",
+		"LOCALISATION",
+		"GAME_RULES",
+		"AUDIO_DATA",
+		"COLOUR_TABLE",
+		"GAME_RULES_HEADER",
+		"SKIN_DATA",
+		"MODELS",
+		"BEHAVIOURS",
+		"MATERIALS"
+	};
+
 	// Gets a asset type as a string
+<<<<<<< HEAD
 	static constexpr const char *PCKAssetFile::getAssetTypeString(PCKAssetFile::Type type)
 	{
 		switch (type)
@@ -98,12 +130,27 @@ public:
 
 	// Gets a asset type as a string for dialogs
 	constexpr const char *PCKAssetFile::getAssetTypeStringDisplay() const
+=======
+	static constexpr const char* getAssetTypeString(Type type)
+	{
+		int iType = (int)type;
+		int iTotal = (int)Type::PCK_ASSET_TYPES_TOTAL;
+		return iType >= iTotal ? "UNKNOWN" : AssetTypeStrings[iType];
+	}
+
+	// Gets a asset type as a string for dialogs
+	constexpr const char* getAssetTypeStringDisplay() const
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	{
 		return getAssetTypeStringDisplay(mAssetType);
 	}
 
 	// Gets a asset type as a string for dialogs
+<<<<<<< HEAD
 	static constexpr const char *PCKAssetFile::getAssetTypeStringDisplay(PCKAssetFile::Type type)
+=======
+	static constexpr const char* getAssetTypeStringDisplay(Type type)
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	{
 		switch (type)
 		{
@@ -142,12 +189,20 @@ public:
 		}
 	}
 
+<<<<<<< HEAD
 	constexpr std::array<const char *, 2> PCKAssetFile::getPreferredExtension() const
+=======
+	const std::vector<const char*> getPreferredAssetExtension() const
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	{
-		return getPreferredExtension(mAssetType);
+		return getPreferredAssetExtension(mAssetType);
 	}
 
+<<<<<<< HEAD
 	static constexpr std::array<const char *, 2> PCKAssetFile::getPreferredExtension(PCKAssetFile::Type type)
+=======
+	static const std::vector<const char*> getPreferredAssetExtension(Type type)
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	{
 		switch (type)
 		{
@@ -172,8 +227,62 @@ public:
 		case Type::MATERIALS:
 			return {"bin", nullptr};
 		default:
+<<<<<<< HEAD
 			return {"*"}; // any file type
+=======
+			return { "*", nullptr }; // any file type
 		}
+	}
+
+	static PCKAssetFile::Type getPreferredAssetType(const std::string& filepath)
+	{
+		std::filesystem::path path(filepath);
+		std::string filename = path.filename().string();
+		std::string ext = path.extension().string();
+
+		if (!ext.empty() && ext[0] == '.')
+			ext.erase(0, 1);
+		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+		std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+
+		if (filename == "0")
+			return Type::INFO;
+		if (ext == "png" || ext == "tga")
+		{
+			if (filename.rfind("dlcskin", 0) == 0)
+				return Type::SKIN;
+			else if (filename.rfind("dlccape", 0) == 0)
+				return Type::CAPE;
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
+		}
+		if (ext == "pck")
+		{
+			if (filename == "audio.pck")
+				return Type::AUDIO_DATA;
+			else if (filename == "skins.pck")
+				return Type::SKIN_DATA;
+			else
+				return Type::TEXTURE_PACK_INFO;
+		}
+		if (ext == "loc")
+			return Type::LOCALISATION;
+		if (ext == "grf")
+			return Type::GAME_RULES;
+		if (ext == "col")
+			return Type::COLOUR_TABLE;
+		if (ext == "grh")
+			return Type::GAME_RULES_HEADER;
+		if (ext == "bin")
+		{
+			if (filename == "models.bin")
+				return Type::MODELS;
+			else if (filename == "behaviours.bin")
+				return Type::BEHAVIOURS;
+			else if (filename == "entitymaterials.bin")
+				return Type::MATERIALS;
+		}
+
+		return Type::TEXTURE;
 	}
 
 	PCKAssetFile(const std::string &path, const std::vector<unsigned char> &data, Type assetType)

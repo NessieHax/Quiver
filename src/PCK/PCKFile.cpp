@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 #include "PCKFile.h"
 #include "IO/BinaryReader.h"
 #include "IO/BinaryWriter.h"
+=======
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 #include <set>
+#include "PCK/PCKFile.h"
+#include "Binary/BinaryReader.h"
+#include "Binary/BinaryWriter.h"
 
 const char *XML_VERSION_STRING = "XMLVERSION"; // used for advanced/full box support for skins
 
@@ -12,18 +18,28 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 	uint32_t version;
 	reader.ReadData(&version, 4); // assume this is little endian
 
-	uint32_t versionSwapped = BinaryReader::SwapInt32(version); // swapped for endianness check; assume big endian
+	uint32_t versionSwapped = Binary::SwapInt32(version); // swapped for endianness check; assume big endian
 
 	if (versionSwapped >= 0 && versionSwapped <= 3)
 	{
+<<<<<<< HEAD
 		mEndianess = IO::Endianness::BIG;
 		DBG_LOG("Big Endian detected, version %u", versionSwapped);
+=======
+		mEndianess = Binary::Endianness::BIG;
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 		mVersion = versionSwapped;
+		printf("Big Endian detected");
 	}
 	else if (version >= 0 && version <= 3)
 	{
+<<<<<<< HEAD
 		mEndianess = IO::Endianness::LITTLE;
 		DBG_LOG("Little Endian detected, version %u", version);
+=======
+		mEndianess = Binary::Endianness::LITTLE;
+		printf("Little Endian detected");
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 		mVersion = version;
 	}
 	else
@@ -31,10 +47,16 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 		throw std::runtime_error("Invalid PCK version");
 	}
 
+	printf(", version %u\n", mVersion);
+
 	reader.SetEndianness(mEndianess);
 
 	uint32_t propertyCount = reader.ReadInt32();
+<<<<<<< HEAD
 	DBG_LOG("Properties: %u", propertyCount);
+=======
+	printf("Properties: %u\n", propertyCount);
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 
 	mProperties.clear();
 	mProperties.reserve(propertyCount);
@@ -44,9 +66,13 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 		uint32_t propertyIndex = reader.ReadInt32();
 		uint32_t stringLength = reader.ReadInt32();
 
-		std::string property = IO::ToUTF8(reader.ReadU16String(stringLength));
+		std::string property = Binary::ToUTF8(reader.ReadU16String(stringLength));
 
+<<<<<<< HEAD
 		DBG_LOG("\tIndex: %u, Property: %s", propertyIndex, property.c_str());
+=======
+		printf("\tIndex: %u, Property: %s\n", propertyIndex, property.c_str());
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 
 		mProperties.push_back(property);
 
@@ -60,7 +86,11 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 	if (mXMLSupport)
 	{
 		reader.ReadInt32(); // just "skip" 4 bytes
+<<<<<<< HEAD
 		DBG_LOG("XML Version: %u", mXMLSupport);
+=======
+		printf("XML Version: %u\n", mXMLSupport);
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	}
 
 	uint32_t fileCount = reader.ReadInt32();
@@ -71,7 +101,7 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 		uint32_t fileType = reader.ReadInt32();
 		uint32_t filePathLength = reader.ReadInt32();
 
-		std::string filePath = IO::ToUTF8(reader.ReadU16String(filePathLength));
+		std::string filePath = Binary::ToUTF8(reader.ReadU16String(filePathLength));
 		std::replace(filePath.begin(), filePath.end(), '\\', '/');
 
 		reader.ReadInt32(); // skip 4 bytes
@@ -79,14 +109,22 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 		mFiles.emplace_back(std::make_shared<PCKAssetFile>(filePath, PCKAssetFile::Type(fileType), fileSize));
 	}
 
+<<<<<<< HEAD
 	DBG_LOG("Files: %u", fileCount);
+=======
+	printf("Files: %u\n", fileCount);
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 
 	for (int i = 0; i < mFiles.size(); ++i)
 	{
 		std::shared_ptr<PCKAssetFile> &file = mFiles[i];
 		uint32_t propertyCount = reader.ReadInt32();
 
+<<<<<<< HEAD
 		DBG_LOG("\tSize: %zu Bytes | Type: %u | Properties: %u | Path: %ls", file->getFileSize(), (uint32_t)file->getAssetType(), propertyCount, file->getPath().c_str());
+=======
+		printf("\tSize: %u Bytes | Type: %u | Properties: %u | Path: %s\n", fileSizes[i], (uint32_t)file.getAssetType(), propertyCount, file.getPath().c_str());
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 
 		for (int j{0}; j < propertyCount; j++)
 		{
@@ -104,7 +142,11 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 
 			reader.ReadInt32(); // skip 4 bytes
 
+<<<<<<< HEAD
 			DBG_LOG("\t\tProperty: %s %s", propertyKey.c_str(), IO::ToUTF8(propertyValue).c_str());
+=======
+			printf("\t\tProperty: %s %s\n", propertyKey.c_str(), Binary::ToUTF8(propertyValue).c_str());
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 
 			file->addProperty(propertyKey, propertyValue);
 		}
@@ -116,14 +158,23 @@ void PCKFile::Read(const std::filesystem::path &inpath)
 	setFilePath(inpath); // finally set the path if everything went well
 }
 
+<<<<<<< HEAD
 void PCKFile::Write(const std::filesystem::path &outpath)
+=======
+void PCKFile::Write(const std::string& outpath, Binary::Endianness endianness)
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 {
 	BinaryWriter writer(outpath);
 	writer.SetEndianness(mEndianess);
 
 	uint32_t versionOut = mVersion;
+<<<<<<< HEAD
 	if (mEndianess != IO::Endianness::LITTLE)
 		versionOut = BinaryWriter::SwapInt32(mVersion);
+=======
+	if (endianness != Binary::Endianness::LITTLE)
+		versionOut = Binary::SwapInt32(mVersion);
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 	writer.WriteData(&versionOut, sizeof(uint32_t));
 
 	// make new property list
@@ -149,7 +200,7 @@ void PCKFile::Write(const std::filesystem::path &outpath)
 	{
 		writer.WriteInt32(i);
 		writer.WriteInt32(static_cast<uint32_t>(mProperties[i].size()));
-		writer.WriteU16String(IO::ToUTF16(mProperties[i]));
+		writer.WriteU16String(Binary::ToUTF16(mProperties[i]));
 		writer.WriteInt32(0); // skip 4 bytes
 	}
 
@@ -168,7 +219,7 @@ void PCKFile::Write(const std::filesystem::path &outpath)
 
 		const std::string &filePath = file->getPath().string();
 		writer.WriteInt32(static_cast<uint32_t>(filePath.size()));
-		writer.WriteU16String(IO::ToUTF16(filePath));
+		writer.WriteU16String(Binary::ToUTF16(filePath));
 		writer.WriteInt32(0); // skip 4 bytes
 	}
 
@@ -191,7 +242,31 @@ void PCKFile::Write(const std::filesystem::path &outpath)
 	}
 }
 
+<<<<<<< HEAD
 void PCKFile::addFile(const std::shared_ptr<PCKAssetFile> &file)
+=======
+void PCKFile::addFileFromDisk(const std::string& filepath, std::string new_filepath, PCKAssetFile::Type fileType)
+{
+	if (new_filepath.empty())
+		new_filepath = std::filesystem::path(filepath).filename().string();
+
+	std::ifstream in(filepath, std::ios::binary | std::ios::ate);
+	if (!in.is_open())
+		throw std::runtime_error("Could not open file: " + filepath);
+
+	std::streamsize size = in.tellg();
+	in.seekg(0, std::ios::beg);
+
+	std::vector<unsigned char> buffer(size);
+	if (!in.read(reinterpret_cast<char*>(buffer.data()), size))
+		throw std::runtime_error("Failed to read file: " + filepath);
+
+	PCKAssetFile asset(new_filepath, buffer, fileType);
+	addFile(&asset);
+}
+
+void PCKFile::addFile(const PCKAssetFile* file)
+>>>>>>> 5aede736572f73458824482c4fcb81b6ac43a54d
 {
 	// emplace just sounds cooler, okay??
 	mFiles.push_back(file);
@@ -219,12 +294,42 @@ void PCKFile::clearFiles()
 	mFiles.clear();
 }
 
+int PCKFile::getFileIndex(const PCKAssetFile* file) const
+{
+	if (!file) return -1;
+
+	for (size_t i = 0; i < mFiles.size(); ++i) {
+		if (&mFiles[i] == file)
+			return static_cast<int>(i);
+	}
+	return -1;
+}
+
+void PCKFile::moveFileToIndex(const PCKAssetFile* file, size_t newIndex)
+{
+	if (!file || newIndex >= mFiles.size())
+		return;
+
+	auto it = std::find_if(mFiles.begin(), mFiles.end(), [&](const PCKAssetFile& f) {
+		return &f == file;
+		});
+
+	if (it == mFiles.end())
+		return;
+
+	PCKAssetFile temp = std::move(*it);
+	mFiles.erase(it);
+
+	auto insertIt = mFiles.begin() + newIndex;
+	mFiles.insert(insertIt, std::move(temp));
+}
+
 uint32_t PCKFile::getPCKVersion() const
 {
 	return mVersion;
 }
 
-IO::Endianness PCKFile::getEndianness() const
+Binary::Endianness PCKFile::getEndianness() const
 {
 	return mEndianess;
 }
